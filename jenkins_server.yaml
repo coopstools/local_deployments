@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-server-deployment
+  labels:
+    app: jenkins-server
+  namespace: first-round
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-server
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: jenkins-server
+    spec:
+      containers:
+      - name: jenkins-server
+        image: jenkins/jenkins:2.277.1-lts-alpine
+        imagePullPolicy: Always
+        ports:
+        - name: http-port
+          containerPort: 8080
+        - name: jnlp-port
+          containerPort: 50001
+        env:
+        - name: ENKINS_SLAVE_AGENT_PORT
+          value: "50001"
+        - name: JAVA_OPTS
+          value: "-Djenkins.install.runSetupWizard=false"
+        - name: JENKINS_OPTS
+          value: "--argumentsRealm.roles.user=admin --argumentsRealm.passwd.admin=admin --argumentsRealm.roles.admin=admin"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-server-service
+  labels:
+    run: jenkins-server
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http-port
+    port: 8080
+    targetPort: 8080
+    nodePort: 30010
+    protocol: TCP
+  - name: jnlp-port
+    port: 50001
+    targetPort: 50001
+    nodePort: 30011
+    protocol: TCP
+  selector:
+    app: jenkins-server

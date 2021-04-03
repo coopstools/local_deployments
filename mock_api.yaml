@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-api-deployment
+  labels:
+    app: mock-api
+  namespace: first-round
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mock-api
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: mock-api
+    spec:
+      containers:
+      - name: mock-api
+        image: public.ecr.aws/i4i9f0l0/coopstools_homebrew:0.0.4
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8069
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-api
+  labels:
+    run: mock-api
+spec:
+  type: LoadBalancer
+  #adding any ports to the deployment requires updating nginx and ufw on host
+  ports:
+  - port: 8069
+    targetPort: 8069
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: mock-api
